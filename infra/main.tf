@@ -6,11 +6,19 @@ terraform {
       version = "~>3.100"
     }
   }
+  backend "azurerm" {
+    resource_group_name  = "docuguardai-rg"
+    storage_account_name = "docuguardaitfstate"
+    container_name       = "tfstate"
+    key                  = "docuguardai.tfstate"
+  }
 }
 
 provider "azurerm" {
   features {}
 }
+
+data "azurerm_client_config" "current" {}
 
 resource "azurerm_resource_group" "docuguardai" {
   name     = "docuguardai-rg"
@@ -69,6 +77,50 @@ resource "azurerm_role_assignment" "acr_pull" {
   role_definition_name             = "AcrPull"
   scope                            = azurerm_container_registry.acr.id
   skip_service_principal_aad_check = true
+}
+
+resource "azurerm_postgresql_flexible_server" "docuguardai" {
+  name                   = "docuguardai-db"
+  resource_group_name    = azurerm_resource_group.docuguardai.name
+  location               = azurerm_resource_group.docuguardai.location
+  zone                   = "1"
+
+  administrator_login    = "dbadmin"
+  administrator_password = var.db_password  
+
+  sku_name               = "B_Standard_B1ms" 
+  storage_mb             = 32768        
+  version                = "15"
+
+  backup_retention_days  = 7
+  geo_redundant_backup_enabled = false
+
+  tags = {
+    environment = "development"
+    project     = "docuguardai"
+  }
+}
+
+resource "azurerm_postgresql_flexible_server_firewall_rule" "app_service" {
+  name             = "allow-app-service"
+  server_id        = azurerm_postgresql_flexible_server.docuguardai.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "255.255.255.255"
+}
+
+resource "azurerm_key_vault" "docuguardai" {
+  name                = "docuguardai-kv"
+  location            = azurerm_resource_group.docuguardai.location
+  resource_group_name = azurerm_resource_group.docuguardai.name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  sku_name            = "standard"
+
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = azurerm_linux_web_app.docuguardai_api.identity[0].principal_id
+
+    secret_permissions = ["Get", "List"]
+  }
 }
 
 output "acr_login_server" {

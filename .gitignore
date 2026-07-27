@@ -487,6 +487,9 @@ $RECYCLE.BIN/
 .terraform/
 *.tfstate
 *.tfstate.backup
+*.tfvars
+!example.tfvars
+secrets.tfvars
 
 # .NET secrets and local settings
 appsettings.Development.json

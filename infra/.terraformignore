@@ -1,0 +1,35 @@
+
+# .terraformignore – place in infra/ folder
+# ─────────────────────────────────────────────
+
+# Terraform local folders
+.terraform/
+.terraform.lock.hcl
+
+# Terraform state & plan files
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.*
+
+# Backup files
+*.backup
+
+# Crash logs
+crash.log
+
+# IDE / OS garbage
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local override files (never commit secrets!)
+*.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Sensitive outputs (if you ever save them)
+*.auto.tfvars
