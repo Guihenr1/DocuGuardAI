@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:17
+    container_name: docuguardai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: docuguardaiuser
+      POSTGRES_PASSWORD: d0cu-gu4rd-s3cr3t
+      POSTGRES_DB: docuguardaidb
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U docuguardaiuser -d docuguardaidb]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docuguardai-api
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ENABLE_SCALAR=true
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_HTTPS_PORT=
+      - AUTO_MIGRATE=true
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=docuguardaidb;Username=docuguardaiuser;Password=d0cu-gu4rd-s3cr3t
+    ports:
+      - 5077:8080
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [ CMD, curl, -f, http://localhost:8080/health ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  postgres_data:
