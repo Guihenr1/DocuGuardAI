@@ -490,6 +490,7 @@ $RECYCLE.BIN/
 *.tfvars
 !example.tfvars
 secrets.tfvars
+terraform-outputs.json
 
 # .NET secrets and local settings
 appsettings.Development.json

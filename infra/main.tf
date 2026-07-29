@@ -146,3 +146,13 @@ output "acr_admin_password" {
   value     = azurerm_container_registry.acr.admin_password
   sensitive = true
 }
+output "db_hostname" {
+  description = "Fully qualified domain name for PostgreSQL flexible server"
+  value       = azurerm_postgresql_flexible_server.docuguardai.fqdn
+}
+
+output "db_password" {   
+  description = "PostgreSQL admin password (sensitive)"   
+  value       = var.db_password   
+  sensitive   = true 
+}
