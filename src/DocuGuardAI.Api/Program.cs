@@ -45,6 +45,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("AdminOnly", policy =>
+        policy.RequireClaim("role", "Admin"))
+    .AddPolicy("EditorOrAdmin", policy =>
+        policy.RequireClaim("role", "Admin", "Editor"))
+    .AddPolicy("AnyRole", policy =>
+        policy.RequireClaim("role", "Admin", "Editor", "Viewer"));
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment() || 
@@ -75,11 +83,11 @@ if (app.Environment.IsDevelopment() ||
 //     context.Request.Scheme = "https";   
 //     return next();
 // });
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapHealthChecks("/health");
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy", time = DateTime.UtcNow }));
 app.MapControllers();
-
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.Run();
