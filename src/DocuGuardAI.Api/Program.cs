@@ -47,11 +47,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("AdminOnly", policy =>
-        policy.RequireClaim("role", "Admin"))
+        policy.RequireRole("Admin"))
     .AddPolicy("EditorOrAdmin", policy =>
-        policy.RequireClaim("role", "Admin", "Editor"))
+        policy.RequireRole("Admin", "Editor"))
     .AddPolicy("AnyRole", policy =>
-        policy.RequireClaim("role", "Admin", "Editor", "Viewer"));
+        policy.RequireRole("Admin", "Editor", "Viewer"));
 
 var app = builder.Build();
 
