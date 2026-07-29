@@ -7,6 +7,7 @@ public class DocuGuardAIDbContext(DbContextOptions<DocuGuardAIDbContext> options
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Document> Documents => Set<Document>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

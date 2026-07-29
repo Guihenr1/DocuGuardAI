@@ -496,3 +496,5 @@ terraform-outputs.json
 appsettings.Development.json
 appsettings.Local.json
 secrets.json
+
+/src/DocuGuardAI.Api/uploads

@@ -1,4 +1,5 @@
 using DocuGuardAI.Domain.Entities;
+using DocuGuardAI.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -29,6 +30,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.IsActive)
             .HasDefaultValue(true);
+        
+        builder.Property(u => u.Role)
+            .HasConversion<int>()
+            .HasDefaultValue(UserRole.Viewer);
 
         builder.ToTable("Users");
     }

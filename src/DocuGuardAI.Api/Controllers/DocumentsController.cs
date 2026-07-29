@@ -66,13 +66,6 @@ public class DocumentsController(IMediator mediator, IWebHostEnvironment environ
         var query = new GetUserDocumentsQuery(userGuid);
         var result = await mediator.Send(query);
 
-        if (result.IsSuccess)
-        {
-            // materialize to avoid deferred execution issues and serialize plain DTOs
-            var list = result.Value?.ToList() ?? new List<DocumentDto>();
-            return Ok(list);
-        }
-
         return result.ToActionResult(this);
     }
 
