@@ -5,15 +5,18 @@ using MediatR;
 
 namespace DocuGuardAI.Application.Features.Documents.Commands.Upload;
 
-public class UploadDocumentCommandHandler(IDocumentRepository documentRepository) 
+public class UploadDocumentCommandHandler(IDocumentRepository documentRepository, IUserRepository userRepository) 
     : IRequestHandler<UploadDocumentCommand, Result<UploadDocumentResponse>>
 {
     public async Task<Result<UploadDocumentResponse>> Handle(
         UploadDocumentCommand request,
         CancellationToken ct)
     {
+        var user = await userRepository.GetByIdAsync(request.UserId, ct);
+
         var document = Document.Create(
             request.UserId,
+            user!.CompanyId,
             request.FileName,
             request.FilePath,
             request.ContentType,

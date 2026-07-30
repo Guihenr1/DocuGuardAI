@@ -9,7 +9,7 @@ public class User
     public Guid Id { get; set; }
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
-    public UserRole Role { get; set; } = UserRole.Viewer;
+    public UserRole Role { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsActive { get; set; }
 
@@ -18,7 +18,7 @@ public class User
     
     public ICollection<Document> Documents { get; set; } = new List<Document>();
 
-    public static User Create(string email, string hashPassword, Guid companyId, UserRole role = UserRole.Viewer)
+    public static User Create(string email, string hashPassword, Guid companyId, UserRole role)
     {
         var user = new User()
         {
@@ -32,11 +32,5 @@ public class User
         };
 
         return user;
-    }
-
-    // Backwards-compatible overload: create a user without specifying a company (legacy callers)
-    public static User Create(string email, string hashPassword, UserRole role = UserRole.Viewer)
-    {
-        return Create(email, hashPassword, Guid.Empty, role);
     }
 }

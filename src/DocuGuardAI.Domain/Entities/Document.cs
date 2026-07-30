@@ -34,12 +34,6 @@ public class Document
             IsActive = true
         };
     }
-
-    // Backwards-compatible overload: keep the original signature for callers that do not supply a company
-    public static Document Create(Guid userId, string fileName, string filePath, string contentType, long fileSize)
-    {
-        return Create(userId, Guid.Empty, fileName, filePath, contentType, fileSize);
-    }
 }
 
 public enum DocumentStatus

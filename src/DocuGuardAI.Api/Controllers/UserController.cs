@@ -15,6 +15,7 @@ namespace DocuGuardAI.Api.Controllers;
 public class UserController(IMediator mediator) : ControllerBase
 {
     [HttpPost("register")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
     {
         var result = await mediator.Send(command);

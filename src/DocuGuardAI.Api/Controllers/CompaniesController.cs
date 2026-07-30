@@ -28,6 +28,7 @@ public class CompaniesController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("{companyId:guid}/users")]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> AddUserToCompany(Guid companyId, [FromBody] AddCompanyUserCommand payload)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -53,6 +54,7 @@ public class CompaniesController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{companyId:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> GetCompany(Guid companyId)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -65,6 +67,7 @@ public class CompaniesController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{companyId:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> UpdateCompany(Guid companyId, [FromBody] DocuGuardAI.Application.Features.Companies.Commands.UpdateCompany.UpdateCompanyCommand payload)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

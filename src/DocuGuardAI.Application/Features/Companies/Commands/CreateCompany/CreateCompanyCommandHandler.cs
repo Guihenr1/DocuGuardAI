@@ -13,12 +13,10 @@ public sealed class CreateCompanyCommandHandler(
 {
     public async Task<Result<CreateCompanyResponse>> Handle(CreateCompanyCommand request, CancellationToken ct)
     {
-        // ensure caller exists and is SystemAdmin
         var caller = await userRepository.GetByIdAsync(request.CallerId, ct);
         if (caller == null || caller.Role != UserRole.SystemAdmin)
             return Result.Unauthorized();
 
-        // check name uniqueness
         var existing = await companyRepository.GetByNameAsync(request.Name, ct);
         if (existing != null)
             return Result.Conflict("Company name already exists");

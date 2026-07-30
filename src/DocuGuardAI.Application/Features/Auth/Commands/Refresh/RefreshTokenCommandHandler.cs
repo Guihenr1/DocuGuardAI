@@ -28,6 +28,6 @@ public sealed class RefreshTokenCommandHandler(
         var newRefresh = RefreshToken.Create(user.Id, DateTime.UtcNow.AddDays(30));
         await refreshRepo.AddAsync(newRefresh, ct);
         
-        return Result.Success(new LoginResponse(accessToken, DateTime.UtcNow.AddHours(1), newRefresh.Token));
+        return Result.Success(new LoginResponse(accessToken, user.Id, DateTime.UtcNow.AddHours(1), newRefresh.Token));
     }
 }

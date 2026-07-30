@@ -46,10 +46,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("AdminOnly", policy =>
-        policy.RequireRole("Admin", "SystemAdmin"))
-    .AddPolicy("EditorOrAdmin", policy =>
-        policy.RequireRole("Admin", "Editor"))
+    .AddPolicy("SystemAdminOnly", policy => policy.RequireRole("SystemAdmin"))
+    .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin", "SystemAdmin"))
+    .AddPolicy("EditorOrAdmin", policy => policy.RequireRole("Admin", "Editor"))
     .AddPolicy("AnyRole", policy =>
         policy.RequireRole("Admin", "Editor", "Viewer"));
 

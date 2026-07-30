@@ -33,7 +33,10 @@ public sealed class RegisterUserCommandHandler(
         
         var user = User.Create(
             Email.From(request.Email),
-            passwordHasher.HashPassword(request.Password));
+            passwordHasher.HashPassword(request.Password),
+            request.CompanyId,
+            request.Role
+        );
 
         await userRepository.AddAsync(user, ct);
         

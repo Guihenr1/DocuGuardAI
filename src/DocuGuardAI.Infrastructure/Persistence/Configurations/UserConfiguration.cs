@@ -30,10 +30,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.IsActive)
             .HasDefaultValue(true);
-        
+
         builder.Property(u => u.Role)
-            .HasConversion<int>()
-            .HasDefaultValue(UserRole.Viewer);
+            .HasConversion<int>();
 
         builder.ToTable("Users");
     }
