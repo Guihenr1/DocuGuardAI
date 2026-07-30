@@ -35,24 +35,91 @@ public class DocumentsController(IMediator mediator, IWebHostEnvironment environ
         if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
             return Unauthorized();
 
-        Directory.CreateDirectory(_uploadPath);
-        var fileName = $"{Guid.NewGuid()}_{file.FileName}";
-        var filePath = Path.Combine(_uploadPath, fileName);
+        var (success, result) = await ProcessFileUploadAsync(file, userGuid);
+        return success ? Ok(result) : result;
+    }
 
-        await using (var stream = new FileStream(filePath, FileMode.Create))
+    [HttpPost("upload-batch")]
+    [Authorize(Policy = "EditorOrAdmin")]
+    public async Task<IActionResult> UploadDocuments([FromForm] IFormFileCollection files)
+    {
+        if (files == null || files.Count == 0)
+            return BadRequest("At least one file is required");
+
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+            return Unauthorized();
+
+        var uploadResults = new List<dynamic>();
+        var errors = new List<string>();
+
+        foreach (var file in files)
         {
-            await file.CopyToAsync(stream);
+            if (file.Length == 0)
+            {
+                errors.Add($"File '{file.FileName}' is empty");
+                continue;
+            }
+
+            if (file.Length > MaxFileSize)
+            {
+                errors.Add($"File '{file.FileName}' exceeds {MaxFileSize / 1024 / 1024} MB limit");
+                continue;
+            }
+
+            if (!IsValidContentType(file.ContentType))
+            {
+                errors.Add($"File '{file.FileName}' has invalid type: {file.ContentType}");
+                continue;
+            }
+
+            var (success, result) = await ProcessFileUploadAsync(file, userGuid);
+            if (success)
+            {
+                uploadResults.Add(new { success = true, file = file.FileName, result });
+            }
+            else
+            {
+                errors.Add($"File '{file.FileName}' failed to upload");
+            }
         }
 
-        var command = new UploadDocumentCommand(
-            userGuid,
-            file.FileName,
-            filePath,
-            file.ContentType,
-            file.Length);
+        return Ok(new
+        {
+            uploadedCount = uploadResults.Count,
+            failedCount = errors.Count,
+            uploads = uploadResults,
+            errors = errors
+        });
+    }
 
-        var result = await mediator.Send(command);
-        return result.ToActionResult(this);
+    private async Task<(bool success, dynamic result)> ProcessFileUploadAsync(IFormFile file, Guid userGuid)
+    {
+        try
+        {
+            Directory.CreateDirectory(_uploadPath);
+            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+            var filePath = Path.Combine(_uploadPath, fileName);
+
+            await using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var command = new UploadDocumentCommand(
+                userGuid,
+                file.FileName,
+                filePath,
+                file.ContentType,
+                file.Length);
+
+            var result = await mediator.Send(command);
+            return (result.IsSuccess, result);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
     }
 
     [HttpGet]
