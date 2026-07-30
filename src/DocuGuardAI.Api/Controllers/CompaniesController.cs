@@ -22,7 +22,7 @@ public class CompaniesController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("{companyId:guid}/users")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize]
     public async Task<IActionResult> AddUserToCompany(Guid companyId, [FromBody] AddCompanyUserCommand payload)
     {
         var command = payload with { CompanyId = companyId };
@@ -40,7 +40,7 @@ public class CompaniesController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{companyId:guid}")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize]
     public async Task<IActionResult> GetCompany(Guid companyId)
     {
         var query = new DocuGuardAI.Application.Features.Companies.Queries.GetCompany.GetCompanyQuery(companyId);
