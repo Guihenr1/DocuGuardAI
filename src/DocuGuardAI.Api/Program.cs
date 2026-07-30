@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using Azure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,28 @@ builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
+
+var environment = builder.Environment;
+if (!environment.IsDevelopment())
+{
+    var keyVaultUrl = builder.Configuration["KeyVault:Url"]
+                      ?? Environment.GetEnvironmentVariable("KEYVAULT_URL");
+
+    if (!string.IsNullOrEmpty(keyVaultUrl))
+    {
+        try
+        {
+            var credential = new DefaultAzureCredential();
+            builder.Configuration.AddAzureKeyVault(
+                new Uri(keyVaultUrl),
+                credential);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Could not connect to Key Vault: {ex.Message}");
+        }
+    }
+}
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));

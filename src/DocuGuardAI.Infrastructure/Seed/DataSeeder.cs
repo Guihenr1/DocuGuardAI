@@ -8,13 +8,6 @@ namespace DocuGuardAI.Infrastructure.Seed;
 
 public static class DataSeeder
 {
-    /// <summary>
-    /// Ensures a default company and a default system admin user exist.
-    /// Reads optional settings from configuration:
-    /// - Seed:AdminEmail (default: admin@docuguard.ai)
-    /// - Seed:AdminPassword (default: Password123!)
-    /// - Seed:CompanyName (default: DocuGuardAI)
-    /// </summary>
     public static async Task EnsureSeedAsync(IServiceProvider services, CancellationToken ct = default)
     {
         using var scope = services.CreateScope();
@@ -27,7 +20,6 @@ public static class DataSeeder
         var adminPassword = config["Seed:AdminPassword"] ?? "Password123!";
         var companyName = config["Seed:CompanyName"] ?? "DocuGuardAI";
 
-        // create company if missing
         var company = await companyRepo.GetByNameAsync(companyName, ct);
         if (company == null)
         {
@@ -35,14 +27,12 @@ public static class DataSeeder
             await companyRepo.AddAsync(company, ct);
         }
 
-        // create system admin user if missing
         var existingUser = await userRepo.GetByEmailAsync(adminEmail, ct);
         if (existingUser == null)
         {
             var adminUser = User.Create(Email.From(adminEmail), passwordHasher.HashPassword(adminPassword), company.Id, UserRole.SystemAdmin);
             await userRepo.AddAsync(adminUser, ct);
 
-            // link company administrator to this user if not set
             if (company.AdministratorId == null || company.AdministratorId == Guid.Empty)
             {
                 company.AdministratorId = adminUser.Id;
