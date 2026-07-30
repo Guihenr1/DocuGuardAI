@@ -75,6 +75,9 @@ if (app.Environment.IsDevelopment() ||
     var dbContext = scope.ServiceProvider.GetRequiredService<DocuGuardAIDbContext>();
 
     await dbContext.Database.MigrateAsync();
+
+// seed default data (company + system admin)
+await DocuGuardAI.Infrastructure.Seed.DataSeeder.EnsureSeedAsync(app.Services);
 }
 
 // app.UseHttpsRedirection();
