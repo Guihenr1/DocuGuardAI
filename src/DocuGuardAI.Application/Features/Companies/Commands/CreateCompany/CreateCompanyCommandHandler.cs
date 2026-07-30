@@ -3,17 +3,24 @@ using DocuGuardAI.Application.Interfaces.Repositories;
 using DocuGuardAI.Domain.Entities;
 using DocuGuardAI.Domain.ValueObjects;
 using MediatR;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace DocuGuardAI.Application.Features.Companies.Commands.CreateCompany;
 
 public sealed class CreateCompanyCommandHandler(
     ICompanyRepository companyRepository,
     IUserRepository userRepository,
-    IPasswordHasher passwordHasher) : IRequestHandler<CreateCompanyCommand, Result<CreateCompanyResponse>>
+    IPasswordHasher passwordHasher,
+    IHttpContextAccessor httpContextAccessor) : IRequestHandler<CreateCompanyCommand, Result<CreateCompanyResponse>>
 {
     public async Task<Result<CreateCompanyResponse>> Handle(CreateCompanyCommand request, CancellationToken ct)
     {
-        var caller = await userRepository.GetByIdAsync(request.CallerId, ct);
+        var userId = httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var callerId))
+            return Result.Unauthorized();
+
+        var caller = await userRepository.GetByIdAsync(callerId, ct);
         if (caller == null || caller.Role != UserRole.SystemAdmin)
             return Result.Unauthorized();
 

@@ -1,6 +1,7 @@
 using DocuGuardAI.Application.Interfaces.Repositories;
 using DocuGuardAI.Infrastructure.Auth;
 using DocuGuardAI.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -26,6 +27,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<ICompanyRepository, CompanyRepository>();
+        services.AddHttpContextAccessor();
 
         return services;
     }

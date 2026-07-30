@@ -3,4 +3,4 @@ using MediatR;
 
 namespace DocuGuardAI.Application.Features.Companies.Queries.GetCompany;
 
-public sealed record GetCompanyQuery(Guid CallerId, Guid CompanyId) : IRequest<Result<DocuGuardAI.Application.Features.Companies.CompanyDto>>;
+public sealed record GetCompanyQuery(Guid CompanyId) : IRequest<Result<DocuGuardAI.Application.Features.Companies.CompanyDto>>;

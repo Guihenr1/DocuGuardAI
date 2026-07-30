@@ -1,19 +1,26 @@
 using Ardalis.Result;
 using DocuGuardAI.Application.Interfaces.Repositories;
 using MediatR;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace DocuGuardAI.Application.Features.Companies.Commands.UpdateCompany;
 
 public sealed class UpdateCompanyCommandHandler(
     ICompanyRepository companyRepository,
-    IUserRepository userRepository) : IRequestHandler<UpdateCompanyCommand, Result<DocuGuardAI.Application.Features.Companies.CompanyDto>>
+    IUserRepository userRepository,
+    IHttpContextAccessor httpContextAccessor) : IRequestHandler<UpdateCompanyCommand, Result<DocuGuardAI.Application.Features.Companies.CompanyDto>>
 {
     public async Task<Result<DocuGuardAI.Application.Features.Companies.CompanyDto>> Handle(UpdateCompanyCommand request, CancellationToken ct)
     {
+        var userId = httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var callerId))
+            return Result<DocuGuardAI.Application.Features.Companies.CompanyDto>.Unauthorized();
+
         var company = await companyRepository.GetByIdAsync(request.CompanyId, ct);
         if (company == null) return Result<DocuGuardAI.Application.Features.Companies.CompanyDto>.NotFound();
 
-        var caller = await userRepository.GetByIdAsync(request.CallerId, ct);
+        var caller = await userRepository.GetByIdAsync(callerId, ct);
         if (caller == null) return Result<DocuGuardAI.Application.Features.Companies.CompanyDto>.Unauthorized();
 
         var isAdmin = caller.Role == DocuGuardAI.Domain.ValueObjects.UserRole.SystemAdmin;

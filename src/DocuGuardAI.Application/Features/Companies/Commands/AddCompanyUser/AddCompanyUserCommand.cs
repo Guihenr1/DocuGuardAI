@@ -6,7 +6,6 @@ using DocuGuardAI.Domain.Entities;
 namespace DocuGuardAI.Application.Features.Companies.Commands.AddCompanyUser;
 
 public sealed record AddCompanyUserCommand(
-    Guid CallerId,
     Guid CompanyId,
     string Email,
     string Password,

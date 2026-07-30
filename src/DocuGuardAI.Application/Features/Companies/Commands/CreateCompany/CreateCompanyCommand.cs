@@ -6,7 +6,6 @@ using MediatR;
 namespace DocuGuardAI.Application.Features.Companies.Commands.CreateCompany;
 
 public sealed record CreateCompanyCommand(
-    Guid CallerId,
     string Name,
     string AdminEmail,
     string AdminPassword,

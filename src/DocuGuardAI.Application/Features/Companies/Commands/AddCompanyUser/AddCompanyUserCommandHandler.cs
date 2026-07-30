@@ -3,16 +3,23 @@ using DocuGuardAI.Application.Interfaces.Repositories;
 using DocuGuardAI.Domain.Entities;
 using DocuGuardAI.Domain.ValueObjects;
 using MediatR;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace DocuGuardAI.Application.Features.Companies.Commands.AddCompanyUser;
 
 public sealed class AddCompanyUserCommandHandler(
     ICompanyRepository companyRepository,
     IUserRepository userRepository,
-    IPasswordHasher passwordHasher) : IRequestHandler<AddCompanyUserCommand, Result<AddCompanyUserResponse>>
+    IPasswordHasher passwordHasher,
+    IHttpContextAccessor httpContextAccessor) : IRequestHandler<AddCompanyUserCommand, Result<AddCompanyUserResponse>>
 {
     public async Task<Result<AddCompanyUserResponse>> Handle(AddCompanyUserCommand request, CancellationToken ct)
     {
+        var userId = httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var callerId))
+            return Result.Unauthorized();
+
         // only allow creating Editor or Viewer
         if (request.Role != UserRole.Editor && request.Role != UserRole.Viewer)
         {
@@ -30,7 +37,7 @@ public sealed class AddCompanyUserCommandHandler(
         if (company == null)
             return Result.NotFound();
 
-        var caller = await userRepository.GetByIdAsync(request.CallerId, ct);
+        var caller = await userRepository.GetByIdAsync(callerId, ct);
         if (caller == null)
             return Result.Unauthorized();
 
