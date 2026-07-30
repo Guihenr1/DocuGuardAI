@@ -25,18 +25,29 @@ public sealed class CreateCompanyCommandHandler(
             return Result.Unauthorized();
 
         var existing = await companyRepository.GetByNameAsync(request.Name, ct);
-        if (existing != null)
-            return Result.Conflict("Company name already exists");
+        switch (existing)
+        {
+            case { IsActive: true }:
+                return Result.Conflict("Company name already exists");
+            case null:
+            {
+                var company = Company.Create(request.Name, null, request.AdminType);
+                await companyRepository.AddAsync(company, ct);
 
-        var company = Company.Create(request.Name, null, request.AdminType);
-        await companyRepository.AddAsync(company, ct);
+                var admin = User.Create(Email.From(request.AdminEmail), passwordHasher.HashPassword(request.AdminPassword), company.Id, UserRole.Admin);
+                await userRepository.AddAsync(admin, ct);
 
-        var admin = User.Create(Email.From(request.AdminEmail), passwordHasher.HashPassword(request.AdminPassword), company.Id, UserRole.Admin);
-        await userRepository.AddAsync(admin, ct);
+                company.AdministratorId = admin.Id;
+                await companyRepository.UpdateAsync(company, ct);
 
-        company.AdministratorId = admin.Id;
-        await companyRepository.UpdateAsync(company, ct);
+                return Result.Success(new CreateCompanyResponse(company.Id, admin.Id));
+            }
+        }
 
-        return Result.Success(new CreateCompanyResponse(company.Id, admin.Id));
+        existing.IsActive = true;
+            
+        await companyRepository.UpdateAsync(existing, ct);
+
+        return Result.Success(new CreateCompanyResponse(existing.Id, existing.AdministratorId!.Value));
     }
 }

@@ -37,7 +37,6 @@ public sealed class LoginCommandHandler(
         
         return Result.Success(new LoginResponse(
             AccessToken: accessToken,
-            UserId: user.Id,
             ExpiresAt: DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenMinutes), 
             RefreshToken: refreshToken.Token));
     }

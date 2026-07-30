@@ -37,7 +37,8 @@ public class CompanyRepository : ICompanyRepository
 
     public async Task DeleteAsync(Company company, CancellationToken ct)
     {
-        _context.Companies.Remove(company);
+        company.IsActive  = false;
+        _context.Companies.Update(company);
         await _context.SaveChangesAsync(ct);
     }
 

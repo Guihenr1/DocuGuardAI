@@ -23,7 +23,7 @@ public sealed class DeleteCompanyCommandHandler(
             return Result.Unauthorized();
 
         var company = await companyRepository.GetByIdAsync(request.CompanyId, ct);
-        if (company == null) return Result.NotFound();
+        if (company == null || !company.IsActive) return Result.NotFound();
 
         await companyRepository.DeleteAsync(company, ct);
         return Result.Success();

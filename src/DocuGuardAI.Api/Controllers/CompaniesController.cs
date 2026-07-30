@@ -58,7 +58,7 @@ public class CompaniesController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{companyId:guid}")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdminOnly")]
     public async Task<IActionResult> DeleteCompany(Guid companyId)
     {
         var command = new DocuGuardAI.Application.Features.Companies.Commands.DeleteCompany.DeleteCompanyCommand(companyId);
