@@ -47,7 +47,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("AdminOnly", policy =>
-        policy.RequireRole("Admin"))
+        policy.RequireRole("Admin", "SystemAdmin"))
     .AddPolicy("EditorOrAdmin", policy =>
         policy.RequireRole("Admin", "Editor"))
     .AddPolicy("AnyRole", policy =>
