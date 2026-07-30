@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using DocuGuardAI.Domain.ValueObjects;
 
 namespace DocuGuardAI.Domain.Entities;
@@ -8,22 +10,33 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.Viewer;
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsActive { get; set; }
-    
-    public ICollection<Document> Documents { get; set; } = [];
 
-    public static User Create(string email, string hashPassword,  UserRole role = UserRole.Viewer)
+    public Guid CompanyId { get; set; }
+    public Company Company { get; set; } = null!;
+    
+    public ICollection<Document> Documents { get; set; } = new List<Document>();
+
+    public static User Create(string email, string hashPassword, Guid companyId, UserRole role = UserRole.Viewer)
     {
         var user = new User()
         {
-            Id = Guid.NewGuid(), 
-            Email = email, 
+            Id = Guid.NewGuid(),
+            Email = email,
             Role = role,
             PasswordHash = hashPassword,
-            IsActive = true
+            IsActive = true,
+            CompanyId = companyId,
+            CreatedAt = DateTime.UtcNow
         };
-        
+
         return user;
+    }
+
+    // Backwards-compatible overload: create a user without specifying a company (legacy callers)
+    public static User Create(string email, string hashPassword, UserRole role = UserRole.Viewer)
+    {
+        return Create(email, hashPassword, Guid.Empty, role);
     }
 }

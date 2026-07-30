@@ -4,6 +4,7 @@ public class Document
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
+    public Guid CompanyId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string FilePath { get; set; } = string.Empty;
     public string ContentType { get; set; } = string.Empty;
@@ -15,13 +16,15 @@ public class Document
     public bool IsActive { get; set; }
     
     public User User { get; set; } = null!;
+    public Company Company { get; set; } = null!;
 
-    public static Document Create(Guid userId, string fileName, string filePath, string contentType, long fileSize)
+    public static Document Create(Guid userId, Guid companyId, string fileName, string filePath, string contentType, long fileSize)
     {
         return new Document
         {
             Id = Guid.NewGuid(),
             UserId = userId,
+            CompanyId = companyId,
             Name = fileName,
             FilePath = filePath,
             ContentType = contentType,
@@ -30,6 +33,12 @@ public class Document
             Status = DocumentStatus.Pending,
             IsActive = true
         };
+    }
+
+    // Backwards-compatible overload: keep the original signature for callers that do not supply a company
+    public static Document Create(Guid userId, string fileName, string filePath, string contentType, long fileSize)
+    {
+        return Create(userId, Guid.Empty, fileName, filePath, contentType, fileSize);
     }
 }
 
