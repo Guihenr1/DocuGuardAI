@@ -18,11 +18,17 @@ public sealed class JwtTokenService(IOptions<JwtSettings> jwtSettingsOptions) : 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        var roleString = user.Role.ToString();
+        if (roleString == "SystemAdmin")
+        {
+            roleString = "SystemAdminOnly";
+        }
+
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim("role", user.Role.ToString()),
+            new Claim("role", roleString),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

@@ -14,7 +14,7 @@ namespace DocuGuardAI.Api.Controllers;
 public class CompaniesController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdminOnly")]
     public async Task<IActionResult> CreateCompany([FromBody] CreateCompanyCommand payload)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -41,7 +41,7 @@ public class CompaniesController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdminOnly")]
     public async Task<IActionResult> GetAllCompanies()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
