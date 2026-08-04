@@ -2,11 +2,11 @@
 
 **Status: Work in progress**
 
-A .NET 8 project focused on document analysis using Azure AI services.  
+A .NET 10 project focused on document analysis using Azure AI services.  
 The goal is to build a practical solution that can analyze documents, extract information, and support basic conversational queries.
 
 ### Tech Stack
-- .NET 8
+- .NET 10
 - Clean Architecture
 - MediatR
 - Azure AI Foundry
