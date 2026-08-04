@@ -1,5 +1,6 @@
 using DocuGuardAI.Application.Interfaces.Repositories;
 using DocuGuardAI.Domain.Entities;
+using DocuGuardAI.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace DocuGuardAI.Infrastructure.Persistence;

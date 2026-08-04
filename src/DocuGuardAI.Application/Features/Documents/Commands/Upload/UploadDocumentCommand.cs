@@ -11,4 +11,9 @@ public record UploadDocumentCommand(
     long FileSize
 ) : IRequest<Result<UploadDocumentResponse>>;
 
-public record UploadDocumentResponse(Guid DocumentId, string FileName, DateTime UploadedAt);
+public record UploadDocumentResponse(
+    Guid DocumentId, 
+    string FileName, 
+    DateTime UploadedAt,
+    bool IsSafe = true,
+    string? SafetyMessage = null);

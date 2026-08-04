@@ -1,3 +1,5 @@
+using DocuGuardAI.Domain.Enums;
+
 namespace DocuGuardAI.Domain.Entities;
 
 public class Document
@@ -11,7 +13,7 @@ public class Document
     public long FileSize { get; set; }
     public DateTime UploadedAt { get; set; }
     public DateTime? ProcessedAt { get; set; }
-    public DocumentStatus Status { get; set; } = DocumentStatus.Pending;
+    public DocumentStatus Status { get; set; } = DocumentStatus.Uploaded;
     public string? ProcessingResult { get; set; }
     public bool IsActive { get; set; }
     
@@ -30,16 +32,20 @@ public class Document
             ContentType = contentType,
             FileSize = fileSize,
             UploadedAt = DateTime.UtcNow,
-            Status = DocumentStatus.Pending,
+            Status = DocumentStatus.Uploaded,
             IsActive = true
         };
     }
-}
+    
+    public void MarkUnprocessed(string reason)
+    {
+        Status = DocumentStatus.Unprocessed;
+        ProcessingResult = reason;
+        ProcessedAt = DateTime.UtcNow;
+    }
 
-public enum DocumentStatus
-{
-    Pending = 0,
-    Processing = 1,
-    Completed = 2,
-    Failed = 3
+    public void MarkSafetyCheckPassed()
+    {
+        Status = DocumentStatus.SafetyCheckPassed;
+    }
 }

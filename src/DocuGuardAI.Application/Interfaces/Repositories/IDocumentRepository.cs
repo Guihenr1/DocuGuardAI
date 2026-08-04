@@ -1,4 +1,5 @@
 using DocuGuardAI.Domain.Entities;
+using DocuGuardAI.Domain.Enums;
 
 namespace DocuGuardAI.Application.Interfaces.Repositories;
 

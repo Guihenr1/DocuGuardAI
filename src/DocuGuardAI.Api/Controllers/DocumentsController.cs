@@ -36,7 +36,7 @@ public class DocumentsController(IMediator mediator, IWebHostEnvironment environ
             return Unauthorized();
 
         var (success, result) = await ProcessFileUploadAsync(file, userGuid);
-        return success ? Ok(result) : result;
+        return success ? Ok(result) : BadRequest(result);
     }
 
     [HttpPost("upload-batch")]

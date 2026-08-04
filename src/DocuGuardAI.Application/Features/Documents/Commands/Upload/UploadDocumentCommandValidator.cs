@@ -1,3 +1,4 @@
+using DocuGuardAI.Application.Common.Constants;
 using FluentValidation;
 
 namespace DocuGuardAI.Application.Features.Documents.Commands.Upload;
@@ -10,8 +11,12 @@ public class UploadDocumentCommandValidator : AbstractValidator<UploadDocumentCo
             .NotEmpty().WithMessage("User ID is required");
 
         RuleFor(x => x.FileName)
-            .NotEmpty().WithMessage("File name is required")
-            .MaximumLength(255).WithMessage("File name must not exceed 255 characters");
+            .NotEmpty()
+            .MaximumLength(255)
+            .Must(DocumentFileExtensions.IsAllowed)
+            .WithMessage(x =>
+                $"File extension is not supported. Allowed extensions: " +
+                string.Join(", ", DocumentFileExtensions.Allowed));
 
         RuleFor(x => x.FileSize)
             .GreaterThan(0).WithMessage("File size must be greater than 0")
