@@ -7,6 +7,7 @@ using DocuGuardAI.Application.Interfaces.Repositories;
 using DocuGuardAI.Infrastructure.Auth;
 using DocuGuardAI.Infrastructure.ContentSafety;
 using DocuGuardAI.Infrastructure.DocumentIntelligence;
+using DocuGuardAI.Infrastructure.NaturalLanguageProcessing;
 using DocuGuardAI.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -38,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<ICompanyRepository, CompanyRepository>();
         services.AddScoped<IDocumentTextExtractor, DocumentIntelligenceTextExtractor>();
+        services.AddSingleton<ITextPreprocessor, TextPreprocessor>();
 
         services.Configure<ContentSafetyOptions>(
             configuration.GetSection(ContentSafetyOptions.SectionName));

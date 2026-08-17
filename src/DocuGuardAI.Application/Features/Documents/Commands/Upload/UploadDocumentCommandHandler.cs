@@ -12,7 +12,8 @@ public class UploadDocumentCommandHandler(
     IDocumentRepository documentRepository,
     IUserRepository userRepository,
     IDocumentTextExtractor textExtractor,
-    IContentSafetyService contentSafety) 
+    IContentSafetyService contentSafety,
+    ITextPreprocessor textPreprocessor) 
     : IRequestHandler<UploadDocumentCommand, Result<UploadDocumentResponse>>
 {
     public async Task<Result<UploadDocumentResponse>> Handle(
@@ -37,8 +38,10 @@ public class UploadDocumentCommandHandler(
             request.FilePath, 
             request.ContentType, 
             ct);
+        
+        var cleanedText = textPreprocessor.Preprocess(text);
 
-        var safetyResult = await contentSafety.AnalyzeTextAsync(text, cancellationToken: ct);
+        var safetyResult = await contentSafety.AnalyzeTextAsync(cleanedText, cancellationToken: ct);
 
         if (!safetyResult.IsSafe)
         {
