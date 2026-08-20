@@ -84,7 +84,7 @@ if (app.Environment.IsDevelopment() ||
     
     app.MapScalarApiReference(options =>
     {
-        options.WithTitle("Lina API Documentation")
+        options.WithTitle("DocuGuard API Documentation")
             .WithTheme(ScalarTheme.DeepSpace) 
             .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
     });

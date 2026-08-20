@@ -2,12 +2,14 @@ using Azure;
 using Azure.AI.ContentSafety;
 using DocuGuardAI.Application.Common.Interfaces;
 using DocuGuardAI.Application.Common.Models;
+using DocuGuardAI.Application.Interfaces.Repositories;
 using Microsoft.Extensions.Options;
 
 namespace DocuGuardAI.Infrastructure.ContentSafety;
 
 public class AzureContentSafetyService(
     ContentSafetyClient client,
+    ICacheService cache,
     IOptions<ContentSafetyOptions> options)
     : IContentSafetyService
 {
@@ -24,6 +26,16 @@ public class AzureContentSafetyService(
                 IsSafe: true,
                 CategorySeverities: new Dictionary<string, int>());
         }
+        
+        var blocklistKey = blocklistNames is { Count: > 0 }
+            ? string.Join(",", blocklistNames.OrderBy(x => x))
+            : "none";
+
+        var cacheKey = $"contentsafety:text:{text.GetHashCode()}:{blocklistKey}";
+        
+        var cached = await cache.GetAsync<ContentSafetyResult>(cacheKey, cancellationToken);
+        if (cached is not null)
+            return cached;
 
         var request = new AnalyzeTextOptions(text)
         {
@@ -55,7 +67,11 @@ public class AzureContentSafetyService(
 
         var isSafe = severities.Values.All(s => s < _options.SeverityThreshold)
                      && (matches is null || matches.Count == 0);
+        
+        var result = new ContentSafetyResult(isSafe, severities, matches);
+        
+        await cache.SetAsync(cacheKey, result, TimeSpan.FromHours(1), cancellationToken);
 
-        return new ContentSafetyResult(isSafe, severities, matches);
+        return result;
     }
 }

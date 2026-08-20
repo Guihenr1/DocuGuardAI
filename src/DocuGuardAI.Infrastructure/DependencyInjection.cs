@@ -5,13 +5,17 @@ using Azure.Identity;
 using DocuGuardAI.Application.Common.Interfaces;
 using DocuGuardAI.Application.Interfaces.Repositories;
 using DocuGuardAI.Infrastructure.Auth;
+using DocuGuardAI.Infrastructure.Caching;
 using DocuGuardAI.Infrastructure.ContentSafety;
 using DocuGuardAI.Infrastructure.DocumentIntelligence;
 using DocuGuardAI.Infrastructure.NaturalLanguageProcessing;
 using DocuGuardAI.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace DocuGuardAI.Infrastructure;
@@ -39,6 +43,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<ICompanyRepository, CompanyRepository>();
         services.AddScoped<IDocumentTextExtractor, DocumentIntelligenceTextExtractor>();
+        services.AddScoped<IContentSafetyService, AzureContentSafetyService>();
         services.AddSingleton<ITextPreprocessor, TextPreprocessor>();
 
         services.Configure<ContentSafetyOptions>(
@@ -81,8 +86,27 @@ public static class DependencyInjection
             
             return new DocumentIntelligenceClient(new Uri(options.Endpoint), new DefaultAzureCredential());
         });
+        
+        services.AddMemoryCache();
+        services.AddSingleton<ICacheService>(sp =>
+        {
+            var redisConnectionString = sp.GetRequiredService<IConfiguration>();
+            var redisConnection = redisConnectionString.GetConnectionString("Redis");
 
-        services.AddScoped<IContentSafetyService, AzureContentSafetyService>();
+            if (!string.IsNullOrWhiteSpace(redisConnection))
+            {
+                var distributedCache = sp.GetService<IDistributedCache>();
+
+                if (distributedCache != null)
+                {
+                    var logger = sp.GetRequiredService<ILogger<RedisCacheService>>();
+                    return new RedisCacheService(distributedCache, logger);
+                }
+            }
+
+            var memoryCache = sp.GetRequiredService<IMemoryCache>();
+            return new LocalCacheService(memoryCache);
+        });
 
         services.AddHttpContextAccessor();
 
