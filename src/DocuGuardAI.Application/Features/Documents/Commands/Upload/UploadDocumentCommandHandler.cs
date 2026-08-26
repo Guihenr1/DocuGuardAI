@@ -13,7 +13,8 @@ public class UploadDocumentCommandHandler(
     IUserRepository userRepository,
     IDocumentTextExtractor textExtractor,
     IContentSafetyService contentSafety,
-    ITextPreprocessor textPreprocessor) 
+    ITextPreprocessor textPreprocessor,
+    ICosmosMemory cosmosMemory) 
     : IRequestHandler<UploadDocumentCommand, Result<UploadDocumentResponse>>
 {
     public async Task<Result<UploadDocumentResponse>> Handle(
@@ -50,6 +51,8 @@ public class UploadDocumentCommandHandler(
             document.ProcessedAt = DateTime.UtcNow;
 
             await documentRepository.UpdateAsync(document, ct);
+            
+            await SaveDocumentMemoryAsync(document, cleanedText, isSafe: false, ct);
 
             return Result.Success(new UploadDocumentResponse(
                 document.Id,
@@ -63,6 +66,8 @@ public class UploadDocumentCommandHandler(
         document.ProcessingResult = "Content safety check passed";
 
         await documentRepository.UpdateAsync(document, ct);
+        
+        await SaveDocumentMemoryAsync(document, cleanedText, isSafe: true, ct);
 
         // publish event / enqueue next pipeline steps here
 
@@ -71,6 +76,30 @@ public class UploadDocumentCommandHandler(
             document.Name,
             document.UploadedAt,
             IsSafe: true));
+    }
+    
+    private async Task SaveDocumentMemoryAsync(
+        Document document, 
+        string cleanedText, 
+        bool isSafe, 
+        CancellationToken ct)
+    {
+        var memory = new DocumentMemory
+        {
+            UserId = document.UserId.ToString(),
+            FileName = document.Name,
+            Summary = isSafe 
+                ? $"Document passed safety check. Length: {cleanedText.Length} chars" 
+                : document.ProcessingResult,
+            KeyValues = new Dictionary<string, string>
+            {
+                ["Status"] = document.Status.ToString(),
+                ["ContentType"] = document.ContentType ?? string.Empty,
+                ["DocumentId"] = document.Id.ToString()
+            }
+        };
+
+        await cosmosMemory.SaveDocumentMemoryAsync(memory, ct);
     }
 
     private static string BuildSafetySummary(ContentSafetyResult result)

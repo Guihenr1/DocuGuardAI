@@ -1,5 +1,6 @@
 using Ardalis.Result;
 using DocuGuardAI.Application.Common.DTOs;
+using DocuGuardAI.Application.Common.Interfaces;
 using DocuGuardAI.Application.Interfaces.Repositories;
 using DocuGuardAI.Application.Settings;
 using DocuGuardAI.Domain.Entities;
@@ -14,6 +15,7 @@ public sealed class RegisterUserCommandHandler(
     IPasswordHasher passwordHasher,
     IRefreshTokenRepository refreshTokenRepository,
     IJwtTokenService jwtTokenService,
+    ICosmosMemory cosmosMemory,
     IOptions<JwtSettings> jwtSettingsOptions)
     : IRequestHandler<RegisterUserCommand, Result<RegisterUserResponse>>
 {
@@ -39,6 +41,15 @@ public sealed class RegisterUserCommandHandler(
         );
 
         await userRepository.AddAsync(user, ct);
+        
+        var profile = new UserProfile
+        {
+            UserId = user.Id.ToString(),
+            DisplayName = request.Email,
+            Preferences = new Dictionary<string, string>()
+        };
+
+        await cosmosMemory.SaveUserProfileAsync(profile, ct);
         
         var accessToken = jwtTokenService.GenerateToken(user);
         

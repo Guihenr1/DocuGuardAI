@@ -145,6 +145,77 @@ resource "azurerm_key_vault_secret" "doc_intel_endpoint" {
 }
 
 # ─────────────────────────────────────────────
+# Cosmos DB (Long-Term Memory)
+# ─────────────────────────────────────────────
+resource "azurerm_cosmosdb_account" "docuguardai" {
+  name                = "docuguardai-cosmos"
+  location            = azurerm_resource_group.docuguardai.location
+  resource_group_name = azurerm_resource_group.docuguardai.name
+  offer_type          = "Standard"
+  kind                = "GlobalDocumentDB"
+
+  # Good for development / low cost
+  enable_automatic_failover = false
+  enable_free_tier          = false       
+
+  consistency_policy {
+    consistency_level = "Session"
+  }
+
+  geo_location {
+    location          = azurerm_resource_group.docuguardai.location
+    failover_priority = 0
+  }
+
+  # Optional but useful for local development
+  capabilities {
+    name = "EnableServerless"   # remove this block if you prefer provisioned throughput
+  }
+
+  tags = {
+    environment = "development"
+    project     = "docuguardai"
+  }
+}
+
+resource "azurerm_cosmosdb_sql_database" "memory" {
+  name                = "DocuGuardAI"
+  resource_group_name = azurerm_cosmosdb_account.docuguardai.resource_group_name
+  account_name        = azurerm_cosmosdb_account.docuguardai.name
+}
+
+resource "azurerm_cosmosdb_sql_container" "memory" {
+  name                  = "Memory"
+  resource_group_name   = azurerm_cosmosdb_account.docuguardai.resource_group_name
+  account_name          = azurerm_cosmosdb_account.docuguardai.name
+  database_name         = azurerm_cosmosdb_sql_database.memory.name
+  partition_key_paths   = ["/userId"]
+  partition_key_version = 1
+
+  # Only needed if you are NOT using Serverless
+  # throughput = 400
+}
+
+# Store Cosmos DB connection details in Key Vault
+resource "azurerm_key_vault_secret" "cosmos_endpoint" {
+  name         = "CosmosDb--Endpoint"
+  value        = azurerm_cosmosdb_account.docuguardai.endpoint
+  key_vault_id = azurerm_key_vault.docuguardai.id
+}
+
+resource "azurerm_key_vault_secret" "cosmos_key" {
+  name         = "CosmosDb--Key"
+  value        = azurerm_cosmosdb_account.docuguardai.primary_key
+  key_vault_id = azurerm_key_vault.docuguardai.id
+}
+
+resource "azurerm_key_vault_secret" "cosmos_connection_string" {
+  name         = "CosmosDb--ConnectionString"
+  value        = azurerm_cosmosdb_account.docuguardai.primary_sql_connection_string
+  key_vault_id = azurerm_key_vault.docuguardai.id
+}
+
+# ─────────────────────────────────────────────
 # Future resources (commented – re-enable when needed)
 # ─────────────────────────────────────────────
 
@@ -252,6 +323,15 @@ output "key_vault_uri" {
 
 output "key_vault_name" {
   value = azurerm_key_vault.docuguardai.name
+}
+
+output "cosmos_endpoint" {
+  description = "Cosmos DB endpoint"
+  value       = azurerm_cosmosdb_account.docuguardai.endpoint
+}
+
+output "cosmos_account_name" {
+  value = azurerm_cosmosdb_account.docuguardai.name
 }
 
 # Future outputs (commented)

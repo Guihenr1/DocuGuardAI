@@ -16,6 +16,7 @@
       <PackageReference Include="Azure.AI.ContentSafety" Version="1.0.0" />
       <PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
       <PackageReference Include="Azure.Identity" Version="1.21.0" />
+      <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.63.0-preview.1" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
         <PrivateAssets>all</PrivateAssets>
@@ -23,6 +24,7 @@
       </PackageReference>
       <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.10" />
       <PackageReference Include="Microsoft.Identity.Web" Version="4.13.2" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     </ItemGroup>
 

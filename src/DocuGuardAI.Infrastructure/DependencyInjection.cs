@@ -8,8 +8,10 @@ using DocuGuardAI.Infrastructure.Auth;
 using DocuGuardAI.Infrastructure.Caching;
 using DocuGuardAI.Infrastructure.ContentSafety;
 using DocuGuardAI.Infrastructure.DocumentIntelligence;
+using DocuGuardAI.Infrastructure.Memory;
 using DocuGuardAI.Infrastructure.NaturalLanguageProcessing;
 using DocuGuardAI.Infrastructure.Persistence;
+using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
@@ -44,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<ICompanyRepository, CompanyRepository>();
         services.AddScoped<IDocumentTextExtractor, DocumentIntelligenceTextExtractor>();
         services.AddScoped<IContentSafetyService, AzureContentSafetyService>();
+        services.AddScoped<ICosmosMemory, CosmosMemory>();
         services.AddSingleton<ITextPreprocessor, TextPreprocessor>();
 
         services.Configure<ContentSafetyOptions>(
@@ -106,6 +109,38 @@ public static class DependencyInjection
 
             var memoryCache = sp.GetRequiredService<IMemoryCache>();
             return new LocalCacheService(memoryCache);
+        });
+        
+        services.Configure<CosmosOptions>(
+            configuration.GetSection(CosmosOptions.SectionName));
+        
+        services.AddSingleton(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<CosmosOptions>>().Value;
+            
+            var clientOptions = new CosmosClientOptions
+            {
+                SerializerOptions = new CosmosSerializationOptions
+                {
+                    PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+                }
+            };
+
+            if (string.IsNullOrWhiteSpace(options.Endpoint))
+                throw new InvalidOperationException("CosmosDb:Endpoint is missing.");
+
+            if (!string.IsNullOrWhiteSpace(options.Key))
+            {
+                return new CosmosClient(
+                    options.Endpoint,
+                    options.Key,
+                    clientOptions);
+            }
+
+            return new CosmosClient(
+                options.Endpoint,
+                new DefaultAzureCredential(),
+                clientOptions);
         });
 
         services.AddHttpContextAccessor();
