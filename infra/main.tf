@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.100"
+      version = "~> 4.0"
     }
   }
   # backend "azurerm" {
@@ -155,8 +155,8 @@ resource "azurerm_cosmosdb_account" "docuguardai" {
   kind                = "GlobalDocumentDB"
 
   # Good for development / low cost
-  enable_automatic_failover = false
-  enable_free_tier          = false       
+  automatic_failover_enabled = false
+  free_tier_enabled          = false  
 
   consistency_policy {
     consistency_level = "Session"
@@ -212,6 +212,65 @@ resource "azurerm_key_vault_secret" "cosmos_key" {
 resource "azurerm_key_vault_secret" "cosmos_connection_string" {
   name         = "CosmosDb--ConnectionString"
   value        = azurerm_cosmosdb_account.docuguardai.primary_sql_connection_string
+  key_vault_id = azurerm_key_vault.docuguardai.id
+}
+
+# ─────────────────────────────────────────────
+# Azure OpenAI (Chat Completion)
+# ─────────────────────────────────────────────
+resource "azurerm_cognitive_account" "openai" {
+  name                  = "docuguardai-openai"
+  location              = azurerm_resource_group.docuguardai.location
+  resource_group_name   = azurerm_resource_group.docuguardai.name
+  kind                  = "OpenAI"
+  sku_name              = "S0"
+  custom_subdomain_name = "docuguardai-openai"
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  public_network_access_enabled = true
+
+  tags = {
+    environment = "development"
+    project     = "docuguardai"
+  }
+}
+
+# Deploy a model (example: gpt-4o-mini)
+resource "azurerm_cognitive_deployment" "gpt5_4_mini" {
+  name                 = "gpt-5.4-mini"
+  cognitive_account_id = azurerm_cognitive_account.openai.id
+
+  model {
+    format  = "OpenAI"
+    name    = "gpt-5.4-mini"
+    version = "2026-03-17"
+  }
+
+  sku {
+    name     = "GlobalStandard"   # Recommended for newer models
+    capacity = 1                  # 1 = 1000 tokens per minute (adjust as needed)
+  }
+}
+
+# Store secrets in Key Vault
+resource "azurerm_key_vault_secret" "openai_endpoint" {
+  name         = "AzureOpenAI--Endpoint"
+  value        = azurerm_cognitive_account.openai.endpoint
+  key_vault_id = azurerm_key_vault.docuguardai.id
+}
+
+resource "azurerm_key_vault_secret" "openai_key" {
+  name         = "AzureOpenAI--ApiKey"
+  value        = azurerm_cognitive_account.openai.primary_access_key
+  key_vault_id = azurerm_key_vault.docuguardai.id
+}
+
+resource "azurerm_key_vault_secret" "openai_deployment" {
+  name         = "AzureOpenAI--DeploymentName"
+  value        = azurerm_cognitive_deployment.gpt5_4_mini.name
   key_vault_id = azurerm_key_vault.docuguardai.id
 }
 
@@ -332,6 +391,12 @@ output "cosmos_endpoint" {
 
 output "cosmos_account_name" {
   value = azurerm_cosmosdb_account.docuguardai.name
+}
+
+resource "azurerm_role_assignment" "openai_user" {
+  scope                = azurerm_cognitive_account.openai.id
+  role_definition_name = "Cognitive Services OpenAI User"
+  principal_id         = var.openai_principal_id
 }
 
 # Future outputs (commented)

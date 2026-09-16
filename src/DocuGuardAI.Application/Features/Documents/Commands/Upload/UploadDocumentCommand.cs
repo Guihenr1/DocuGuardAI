@@ -1,4 +1,5 @@
 using Ardalis.Result;
+using DocuGuardAI.Domain.Enums;
 using MediatR;
 
 namespace DocuGuardAI.Application.Features.Documents.Commands.Upload;
@@ -12,8 +13,9 @@ public record UploadDocumentCommand(
 ) : IRequest<Result<UploadDocumentResponse>>;
 
 public record UploadDocumentResponse(
-    Guid DocumentId, 
-    string FileName, 
+    Guid DocumentId,
+    string FileName,
     DateTime UploadedAt,
-    bool IsSafe = true,
-    string? SafetyMessage = null);
+    DocumentStatus Status,
+    string? Message = null
+);

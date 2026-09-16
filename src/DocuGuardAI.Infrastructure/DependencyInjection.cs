@@ -11,6 +11,7 @@ using DocuGuardAI.Infrastructure.DocumentIntelligence;
 using DocuGuardAI.Infrastructure.Memory;
 using DocuGuardAI.Infrastructure.NaturalLanguageProcessing;
 using DocuGuardAI.Infrastructure.Persistence;
+using DocuGuardAI.Infrastructure.Services;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
@@ -48,6 +49,12 @@ public static class DependencyInjection
         services.AddScoped<IContentSafetyService, AzureContentSafetyService>();
         services.AddScoped<ICosmosMemory, CosmosMemory>();
         services.AddSingleton<ITextPreprocessor, TextPreprocessor>();
+        
+        services.Configure<AzureOpenAISettings>(
+            configuration.GetSection("AzureOpenAI"));
+
+        services.AddScoped<IChatCompletionService, AzureOpenAIChatCompletionService>();
+        services.AddScoped<IConversationRepository, ConversationRepository>();
 
         services.Configure<ContentSafetyOptions>(
             configuration.GetSection(ContentSafetyOptions.SectionName));

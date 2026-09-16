@@ -1,9 +1,8 @@
 using Ardalis.Result;
-using DocuGuardAI.Application.Common.Interfaces;       
-using DocuGuardAI.Application.Common.Models;     
+using DocuGuardAI.Application.Common.Interfaces;
+using DocuGuardAI.Application.Common.Models;
 using DocuGuardAI.Application.Interfaces.Repositories;
 using DocuGuardAI.Domain.Entities;
-using DocuGuardAI.Domain.Enums;
 using MediatR;
 
 namespace DocuGuardAI.Application.Features.Documents.Commands.Upload;
@@ -14,7 +13,7 @@ public class UploadDocumentCommandHandler(
     IDocumentTextExtractor textExtractor,
     IContentSafetyService contentSafety,
     ITextPreprocessor textPreprocessor,
-    ICosmosMemory cosmosMemory) 
+    ICosmosMemory cosmosMemory)
     : IRequestHandler<UploadDocumentCommand, Result<UploadDocumentResponse>>
 {
     public async Task<Result<UploadDocumentResponse>> Handle(
@@ -35,61 +34,73 @@ public class UploadDocumentCommandHandler(
 
         await documentRepository.AddAsync(document, ct);
 
+        // 1. Extract text
         var text = await textExtractor.ExtractAsync(
-            request.FilePath, 
-            request.ContentType, 
+            request.FilePath,
+            request.ContentType,
             ct);
-        
+
+        document.MarkTextExtracted();
+        await documentRepository.UpdateAsync(document, ct);
+
+        // 2. Preprocess text
         var cleanedText = textPreprocessor.Preprocess(text);
 
-        var safetyResult = await contentSafety.AnalyzeTextAsync(cleanedText, cancellationToken: ct);
+        // 3. Content Safety check
+        var safetyResult = await contentSafety.AnalyzeTextAsync(
+            cleanedText,
+            cancellationToken: ct);
 
         if (!safetyResult.IsSafe)
         {
-            document.Status = DocumentStatus.Unprocessed;
-            document.ProcessingResult = BuildSafetySummary(safetyResult);
-            document.ProcessedAt = DateTime.UtcNow;
-
+            document.MarkUnprocessed(BuildSafetySummary(safetyResult));
             await documentRepository.UpdateAsync(document, ct);
-            
+
             await SaveDocumentMemoryAsync(document, cleanedText, isSafe: false, ct);
 
             return Result.Success(new UploadDocumentResponse(
                 document.Id,
                 document.Name,
                 document.UploadedAt,
-                IsSafe: false,
-                SafetyMessage: document.ProcessingResult));
+                document.Status,
+                document.ProcessingResult));
         }
 
-        document.Status = DocumentStatus.SafetyCheckPassed;
-        document.ProcessingResult = "Content safety check passed";
-
-        await documentRepository.UpdateAsync(document, ct);
+        // 4. Safety passed
+        document.MarkSafetyCheckPassed();
         
+        var summary = cleanedText.Length > 3000 
+            ? cleanedText.Substring(0, 3000) + "..." 
+            : cleanedText;
+
+        document.SetSummary(summary);
+        
+        await documentRepository.UpdateAsync(document, ct);
+
         await SaveDocumentMemoryAsync(document, cleanedText, isSafe: true, ct);
 
-        // publish event / enqueue next pipeline steps here
+        // TODO: publish event / enqueue next pipeline steps here
 
         return Result.Success(new UploadDocumentResponse(
             document.Id,
             document.Name,
             document.UploadedAt,
-            IsSafe: true));
+            document.Status,
+            "Document uploaded successfully and is ready for conversation."));
     }
-    
+
     private async Task SaveDocumentMemoryAsync(
-        Document document, 
-        string cleanedText, 
-        bool isSafe, 
+        Document document,
+        string cleanedText,
+        bool isSafe,
         CancellationToken ct)
     {
         var memory = new DocumentMemory
         {
             UserId = document.UserId.ToString(),
             FileName = document.Name,
-            Summary = isSafe 
-                ? $"Document passed safety check. Length: {cleanedText.Length} chars" 
+            Summary = isSafe
+                ? $"Document passed safety check. Length: {cleanedText.Length} chars"
                 : document.ProcessingResult,
             KeyValues = new Dictionary<string, string>
             {

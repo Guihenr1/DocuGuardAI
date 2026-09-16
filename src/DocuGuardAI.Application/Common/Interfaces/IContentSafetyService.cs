@@ -8,4 +8,8 @@ public interface IContentSafetyService
         string text,
         IReadOnlyList<string>? blocklistNames = null,
         CancellationToken cancellationToken = default);
+    
+    Task<bool> IsTextSafeAsync(
+        string text,
+        CancellationToken cancellationToken = default);
 }

@@ -46,7 +46,7 @@ public class DocumentRepository(DocuGuardAIDbContext context) : IDocumentReposit
         var document = await GetByIdAsync(id, ct);
         if (document != null)
         {
-            document.IsActive = false;
+            document.MarkDeleted();
             context.Documents.Update(document);
             await context.SaveChangesAsync(ct);
         }

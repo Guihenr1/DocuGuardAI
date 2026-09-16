@@ -15,6 +15,7 @@
       <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
       <PackageReference Include="Azure.AI.ContentSafety" Version="1.0.0" />
       <PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
+      <PackageReference Include="Azure.AI.OpenAI" Version="2.9.0-beta.1" />
       <PackageReference Include="Azure.Identity" Version="1.21.0" />
       <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.63.0-preview.1" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />

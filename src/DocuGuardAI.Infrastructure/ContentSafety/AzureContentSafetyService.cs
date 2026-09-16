@@ -74,4 +74,11 @@ public class AzureContentSafetyService(
 
         return result;
     }
+    
+    public async Task<bool> IsTextSafeAsync(string text, CancellationToken cancellationToken = default)
+    {
+        var result = await AnalyzeTextAsync(text, cancellationToken: cancellationToken);
+
+        return result.IsSafe;
+    }
 }

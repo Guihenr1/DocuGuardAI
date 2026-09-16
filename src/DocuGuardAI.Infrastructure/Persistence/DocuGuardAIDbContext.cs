@@ -9,6 +9,7 @@ public class DocuGuardAIDbContext(DbContextOptions<DocuGuardAIDbContext> options
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<Company> Companies => Set<Company>();
+    public DbSet<Conversation> Conversations => Set<Conversation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
