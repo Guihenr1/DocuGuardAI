@@ -30,11 +30,10 @@ It analyzes documents, extracts structured information, applies content safety c
 
 ### Project Structure
 
-src/
-├── DocuGuardAI.Domain
-├── DocuGuardAI.Application
-├── DocuGuardAI.Infrastructure
-└── DocuGuardAI.WebApi
+- DocuGuardAI.Domain
+- DocuGuardAI.Application
+- DocuGuardAI.Infrastructure
+- DocuGuardAI.WebApi
 
 ### Roadmap (next)
 
