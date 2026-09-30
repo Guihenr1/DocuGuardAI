@@ -1,17 +1,46 @@
-# Intelligent Document Processing Copilot
+# DocuGuardAI
 
-**Status: Work in progress**
+**Status: Active development** (Core features completed up to multi-agent orchestration)
 
-A .NET 10 project focused on document analysis using Azure AI services.  
-The goal is to build a practical solution that can analyze documents, extract information, and support basic conversational queries.
+DocuGuardAI is a .NET 10 solution for intelligent document processing.  
+It analyzes documents, extracts structured information, applies content safety checks, and supports multi-turn conversations through a Manager + Support agent architecture.
+
+### What’s implemented
+
+- Azure Key Vault + Managed Identity
+- Document Intelligence (and multimodal AI clients)
+- Content Safety
+- NLP preprocessing pipeline
+- Cosmos DB long-term memory
+- Redis cache with local fallback
+- Conversational loop
+- Manager & Support Agents (orchestration)
 
 ### Tech Stack
+
 - .NET 10
 - Clean Architecture
-- MediatR
+- MediatR (CQRS)
 - Azure AI Foundry
-- Document Intelligence
-- Cosmos DB
-- Content Safety
+- Azure Document Intelligence
+- Azure Content Safety
+- Azure Cosmos DB
+- Redis
+- Azure Key Vault
 
-Still early in development. More features and documentation will be added over time.
+### Project Structure
+
+src/
+├── DocuGuardAI.Domain
+├── DocuGuardAI.Application
+├── DocuGuardAI.Infrastructure
+└── DocuGuardAI.WebApi
+
+### Roadmap (next)
+
+- SLM memory updates
+- MCP server integrations
+
+---
+
+Still under active development. Documentation and additional features will be added progressively.
